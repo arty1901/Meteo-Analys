@@ -1,3 +1,30 @@
-<mat-list>
-  <mat-list-item *ngFor="let city of citiesList | async"> {{city.text}} </mat-list-item>
-</mat-list>
+<div class="container">
+  <div class="row">
+    <div class="col s3">
+      <mat-form-field>
+        <mat-select placeholder="Выберите город" [(ngModel)]="selectedCity">
+          <mat-option *ngFor="let el of city" [value]="el.indexVMO">
+            {{el.city}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="col s3">
+      <mat-form-field>
+        <mat-select placeholder="Тип данных">
+          <mat-option *ngFor="let el of dataType" [value]="el.value">
+            {{el.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="col s3">
+      <button mat-button (click)="getData()">Show City</button>
+    </div>
+    <div class="col s3"></div>
+  </div>
+</div>
+
+<div *ngIf="chart" class="container">
+  <canvas id="canvas">{{ chart }}</canvas>
+</div>
