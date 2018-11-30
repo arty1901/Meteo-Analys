@@ -1,30 +1,31 @@
 <div class="container">
   <div class="row">
     <div class="col s3">
-      <mat-form-field>
-        <mat-select placeholder="Выберите город" [(ngModel)]="selectedCity">
-          <mat-option *ngFor="let el of city" [value]="el.indexVMO">
-            {{el.city}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <mz-select-container>
+        <select mz-select id="options-select" [placeholder]="'Choose The City'" [(ngModel)]="selectedCity">
+            <option class="left circle" *ngFor="let el of city" [value]="el.indexVMO">
+              {{el.city}}
+            </option>
+        </select>
+      </mz-select-container>
     </div>
+      <mz-datepicker-container class="col s3">
+        <i mz-icon-mdi mz-input-prefix
+           [icon]="'calendar'">
+        </i>
+        <input mz-datepicker
+               [label]="'Date of birth'"
+               [options]="options"
+               id="datepicker"
+               placeholder="Select your birth date"
+               type="text"
+               [(ngModel)]="selectedDate">
+      </mz-datepicker-container>
     <div class="col s3">
-      <mat-form-field>
-        <mat-select placeholder="Тип данных">
-          <mat-option *ngFor="let el of dataType" [value]="el.value">
-            {{el.name}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <button mz-button (click)="getData()">Show City</button>
+      <button mz-button (click)="showDate()">Show Date</button>
     </div>
-    <div class="col s3">
-      <button mat-button (click)="getData()">Show City</button>
-    </div>
-    <div class="col s3"></div>
   </div>
 </div>
 
-<div *ngIf="chart" class="container">
-  <canvas id="canvas">{{ chart }}</canvas>
-</div>
+

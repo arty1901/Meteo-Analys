@@ -1,5 +1,5 @@
 export interface DayliData {
-  indexMVO: number;
+  indexVMO: number;
   year: number;
   month: number;
   day: number;
