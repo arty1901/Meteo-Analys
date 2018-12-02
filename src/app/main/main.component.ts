@@ -1,15 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { MeteoService } from '../meteo.service';
 import { Chart } from '../../../node_modules/chart.js';
-import { Observable } from 'rxjs';
-import { City } from '../interfaces/city';
-
-interface Date {
-  year?: number;
-  month?: number;
-  day?: number;
-}
 
 @Component({
   selector: 'app-main',
@@ -21,23 +12,39 @@ export class MainComponent implements OnInit {
   city = []; // Список городов
   selectedCity: number;
   selectedType: string;
-  selectedDate = '';
+  dateFrom = '';
+  dateTo = '';
+  parsedDateFrom: Date;
+  parsedDateTo: Date;
   dataType = [
     {value: 'month', name: 'Месячные'},
     {value: 'day', name: 'Дневные'},
+  ];
+  month = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
   ];
   public options: Pickadate.DateOptions = {
     clear: 'Clear', // Clear button text
     close: 'Ok',    // Ok button text
     today: 'Today', // Today button text
     closeOnClear: true,
-    closeOnSelect: false,
+    closeOnSelect: true,
     format: 'dddd, dd mmm, yyyy', // Visible date format (defaulted to formatSubmit if provided otherwise 'd mmmm, yyyy')
     formatSubmit: 'yyyy-mm-dd',   // Return value format (used to set/get value)
     selectMonths: true, // Creates a dropdown to control month
     selectYears: 10,    // Creates a dropdown of 10 years to control year,
   };
-  parsedDate: Date;
   constructor(private meteoService: MeteoService) {}
 
   ngOnInit() {
@@ -47,60 +54,77 @@ export class MainComponent implements OnInit {
       console.log(error1);
     });
   }
-  showDate() {
-    this.parsedDate.year = Number(this.selectedDate.split('-')[0]);
-    this.parsedDate.month = Number(this.selectedDate.split('-')[0]);
-    this.parsedDate.day = Number(this.selectedDate.split('-')[0]);
-    console.log(this.parsedDate);
-  }
+
+  // Получает данные в зависимости от типа выбранных данных и выводит график
   public getData() {
-    if (this.selectedType === 'month') {
-      this.meteoService.getMonthData().subscribe(next => {
-          const monthData = []; // Список месячных данных
-          const monthDate = []; // Список данных формата Date
-        const chartLabes = [];
-          let result;
-          next.forEach(el => {
-            if (el.indexVMO === this.selectedCity) {
-              for (let i = 1; i < 13; i++) {
-                monthData.push(el[i]);
+    this.parsedDateFrom = new Date(this.dateFrom);
+    this.parsedDateTo = new Date(this.dateTo);
+    console.log(this.parsedDateTo, this.parsedDateFrom);
+
+    if (this.parsedDateFrom <= this.parsedDateTo) {
+      if (this.selectedType === 'month') {
+        // Если выбраны месячные данные
+        this.meteoService.getMonthData().subscribe(next => {
+
+            const monthData = []; // Список месячных данных
+            const monthDate = []; // Список данных формата Date
+            console.log(this.selectedCity);
+            next.forEach(el => {
+
+              if (Number(this.selectedCity) === Number(el.indexVMO)) {
+
+                for (let i = 0; i < 12; ++i) {
+
+                  let currentDate = new Date(el.year, i);
+                  if ((this.parsedDateFrom.getFullYear() <= currentDate.getFullYear()) &&
+                    (currentDate.getFullYear() <= this.parsedDateTo.getFullYear())) {
+
+                    if ((this.parsedDateFrom.getMonth() <= currentDate.getMonth()) &&
+                      (currentDate.getMonth() <= this.parsedDateTo.getMonth())) {
+
+                      monthData.push(el[i]);
+                      monthDate.push(`${this.month[currentDate.getMonth()]} ${currentDate.getFullYear()}`);
+                    }
+                  }
+                }
               }
+            });
+            // Создание графика
+            this.buildChart(monthData, monthDate);
+          },
+          error1 => {
+            console.log(error1);
+          });
+      } else {
+
+        // Если выбрны дневные данные
+        this.meteoService.getDayliData().subscribe(data => {
+
+          const dayliData = []; // Список месячных данных
+          const dayliDate = []; // Список данных формата Date
+          data.forEach(el => {
+            if (el.indexVMO === this.selectedCity) {
+              dayliData.push(el.maxTemp);
             }
           });
-          result = this.city.find(i => i.indexVMO === this.selectedCity);
+
           // Создание графика
-          this.buildChart(monthData, result.city);
-        },
-        error1 => {
+          this.buildChart(dayliData, dayliDate);
+
+        }, error1 => {
           console.log(error1);
         });
+      }
     } else {
-      this.meteoService.getDayliData().subscribe(data => {
-        const dayliData = []; // Список месячных данных
-        const dayliDate = []; // Список данных формата Date
-        let result;
-        data.forEach(el => {
-          if (el.indexVMO === this.selectedCity) {
-            dayliData.push(el.maxTemp);
-          }
-        });
-        result = this.city.find(i => i.indexVMO === this.selectedCity);
-        this.buildChart(dayliData, result.city);
-      }, error1 => {
-        console.log(error1);
-      });
+      alert('Incorrect date period');
     }
   }
-  public buildChart(data, chartName: string) {
-    const labelsNumber = data.length;
-    const labelsArray = [];
-    for (let i = 0; i < labelsNumber; i++) {
-      labelsArray.push(i);
-    }
+
+  public buildChart(data, labels) {
     this.chart = new Chart('canvas', {
       type: 'line',
       data: {
-        labels: labelsArray,
+        labels: labels,
         datasets: [
           {
             data: data,
@@ -112,10 +136,6 @@ export class MainComponent implements OnInit {
       options: {
         legend: {
           display: false
-        },
-        title: {
-          display: true,
-          text: chartName
         },
         scales: {
           xAxes: [{
