@@ -2,26 +2,28 @@ import { Injectable } from '@angular/core';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
-import { City } from './interfaces/city';
-import { DayliData } from './interfaces/dayliData';
-import { MonthData } from './interfaces/monthData';
+import {Papa} from 'ngx-papaparse';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MeteoService {
-  private url = '/assets/jsonFiles/cities.json';
-  private urlDayliData = '/assets/jsonFiles/dayliData.json';
-  private urlMonthData = '/assets/jsonFiles/monthData.json';
-  constructor(private http: HttpClient) {}
+  public remoteMaskURL = '/api/t/idd_amkf/*/tm/2018-04-10T16:31:00+07/2018-04-10T17:31:00+07?ids_group=1&sn=15409AMK-03';
+  private options = {
+    complete: result => {
+      console.log(result);
+    },
+    newline: '',
+    download: true,
+    delimiter: ';'
+  };
 
-  public getCity(): Observable<City[]> {
-    return this.http.get<City[]>(this.url);
-  }
-  public getDayliData(): Observable<DayliData[]> {
-    return this.http.get<DayliData[]>(this.urlDayliData);
-  }
-  public getMonthData(): Observable<MonthData[]> {
-    return this.http.get<MonthData[]>(this.urlMonthData);
+  constructor(private http: HttpClient,
+              private papa: Papa) {}
+
+  // @ts-ignore
+  public getRemoteData() {
+    // this.http.get(this.remoteMaskURL, {responseType: 'text'});
+    this.papa.parse(this.remoteMaskURL, this.options);
   }
 }

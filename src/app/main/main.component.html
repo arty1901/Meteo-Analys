@@ -1,53 +1,74 @@
-<div class="container">
-  <div class="row">
-    <div class="col s3">
-      <mz-select-container>
-        <select mz-select id="options-select-city" [placeholder]="'Choose The City'" [(ngModel)]="selectedCity">
-            <option class="left circle" *ngFor="let el of city" [value]="el.indexVMO">
-              {{el.city}}
-            </option>
-        </select>
-      </mz-select-container>
-      <div class="container">
-        <button mz-button (click)="getData()">Show Data</button>
-      </div>
-    </div>
-    <div class="col s3">
-      <mz-select-container>
-        <select mz-select id="options-select-type" [placeholder]="'Choose The Datatype'" [(ngModel)]="selectedType">
-          <option class="left circle" *ngFor="let el of dataType" [value]="el.value">
-            {{el.name}}
-          </option>
-        </select>
-      </mz-select-container>
-    </div>
-    <mz-datepicker-container *ngIf="selectedType" class="col s3">
-    <i mz-icon-mdi mz-input-prefix
-       [icon]="'calendar'">
-    </i>
-    <input mz-datepicker
-           [label]="'Period From'"
-           [options]="options"
-           id="datepickerFrom"
-           placeholder="Select date"
-           type="text"
-           [(ngModel)]="dateFrom">
-    </mz-datepicker-container>
-    <mz-datepicker-container *ngIf="selectedType" class="col s3">
+<div class="row">
+  <div class="col s2">
+    <mz-select-container>
+      <select mz-select id="options-select-measure" [placeholder]="'Тип измерителя'" [(ngModel)]="selectedMeasureType">
+        <option class="left circle" *ngFor="let el of measureType" [value]="el.type">
+          {{el.name}}
+        </option>
+      </select>
+    </mz-select-container>
+
+    <mz-select-container>
+      <select mz-select id="options-select-position" [placeholder]="'Координаты станций'" [(ngModel)]="selectedStation">
+        <option class="left circle" *ngFor="let el of stationPosition" [value]="el.number">
+          {{el.name}}
+        </option>
+      </select>
+    </mz-select-container>
+
+    <mz-select-container>
+      <select mz-select id="options-select-serialNumber" [placeholder]="'Серийный номер'"
+              [(ngModel)]="selectedSerialNumber">
+        <option class="left circle" *ngFor="let el of serialNumber" [value]="el.value">
+          {{el.value}}
+        </option>
+      </select>
+    </mz-select-container>
+
+    <mz-datepicker-container>
       <i mz-icon-mdi mz-input-prefix
          [icon]="'calendar'">
       </i>
       <input mz-datepicker
-             [label]="'Period To'"
+             [label]="'Период От'"
+             [options]="options"
+             id="datepickerFrom"
+             placeholder="Выберите дату"
+             type="text"
+             [(ngModel)]="dateFrom">
+    </mz-datepicker-container>
+    <mz-datepicker-container>
+      <i mz-icon-mdi mz-input-prefix
+         [icon]="'calendar'">
+      </i>
+      <input mz-datepicker
+             [label]="'Период До'"
              [options]="options"
              id="datepickerTo"
-             placeholder="Select date"
+             placeholder="Выберите дату"
              type="text"
              [(ngModel)]="dateTo">
     </mz-datepicker-container>
-  </div>
-</div>
 
-<div class="container" *ngIf="chart">
-  <canvas id="canvas"></canvas>
+    <button mz-button (click)="getData()">
+      Show Data
+    </button>
+  </div>
+
+  <div class="col s10">
+    <mz-select-container>
+      <select mz-select
+              id="options-select-amkProps"
+              [placeholder]="'Выберите параметр'"
+      >
+
+        <option class="left circle"  value="">
+          option
+        </option>
+      </select>
+    </mz-select-container>
+    <div class="chart-container" style="position: relative; width: 100%; height: 150px;" *ngIf="chart">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
 </div>

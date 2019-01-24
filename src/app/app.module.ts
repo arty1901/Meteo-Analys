@@ -3,6 +3,9 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
+// papa parse
+import { PapaParseModule} from 'ngx-papaparse';
+
 // ngx-Materialize
 import {
   MzInputModule,
@@ -91,6 +94,7 @@ import { MainComponent } from './main/main.component';
     MainComponent
   ],
   imports: [
+    PapaParseModule,
     HttpClientModule,
     BrowserModule,
     AppRoutingModule,

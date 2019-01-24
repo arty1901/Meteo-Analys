@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { MeteoService } from '../meteo.service';
-import { Chart } from '../../../node_modules/chart.js';
+import {Component, OnInit} from '@angular/core';
+import {MeteoService} from '../meteo.service';
+import {Chart} from '../../../node_modules/chart.js';
+import {Papa} from 'ngx-papaparse';
 
 @Component({
   selector: 'app-main',
@@ -8,32 +9,34 @@ import { Chart } from '../../../node_modules/chart.js';
   styleUrls: ['./main.component.scss']
 })
 export class MainComponent implements OnInit {
+
+  // лольканые перменные
   chart = []; // Переменная будет содержать информацию для графика
-  city = []; // Список городов
-  selectedCity: number;
-  selectedType: string;
+  selectedMeasureType: number; // выбранный тип измерения
+  selectedStation: string; // выбранная станция
+  selectedSerialNumber: string; // выбранный серийный номер
   dateFrom = '';
   dateTo = '';
   parsedDateFrom: Date;
   parsedDateTo: Date;
-  dataType = [
-    {value: 'month', name: 'Месячные'},
-    {value: 'day', name: 'Дневные'},
+
+  measureType = [
+    {type: 'amk', name: 'АМК (мгновенные)'}
   ];
-  month = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December'
+  stationPosition = [
+    {number: 1, name: 'Станция 167.4'},
+    {number: 2, name: 'Станция 160'},
+    {number: 3, name: 'Станция 158.1'},
+    {number: 4, name: 'Станция 151'},
+    {number: 5, name: 'Станция 105'},
+    {number: 6, name: 'Станция 202'},
   ];
+  serialNumber = [
+    {value: '15407AMK-03'},
+    {value: '15408AMK-03'},
+    {value: '15409AMK-03'},
+  ];
+
   public options: Pickadate.DateOptions = {
     clear: 'Clear', // Clear button text
     close: 'Ok',    // Ok button text
@@ -45,79 +48,35 @@ export class MainComponent implements OnInit {
     selectMonths: true, // Creates a dropdown to control month
     selectYears: 10,    // Creates a dropdown of 10 years to control year,
   };
-  constructor(private meteoService: MeteoService) {}
+
+  constructor(private meteoService: MeteoService,
+              private papa: Papa) {
+  }
 
   ngOnInit() {
-    this.meteoService.getCity().subscribe(data => {
-      this.city = data;
-    }, error1 => {
-      console.log(error1);
-    });
   }
 
   // Получает данные в зависимости от типа выбранных данных и выводит график
   public getData() {
     this.parsedDateFrom = new Date(this.dateFrom);
     this.parsedDateTo = new Date(this.dateTo);
-    console.log(this.parsedDateTo, this.parsedDateFrom);
 
-    if (this.parsedDateFrom <= this.parsedDateTo) {
-      if (this.selectedType === 'month') {
-        // Если выбраны месячные данные
-        this.meteoService.getMonthData().subscribe(next => {
+    let horizontalAxe = [];
+    let labels = [];
 
-            const monthData = []; // Список месячных данных
-            const monthDate = []; // Список данных формата Date
-            console.log(this.selectedCity);
-            next.forEach(el => {
-
-              if (Number(this.selectedCity) === Number(el.indexVMO)) {
-
-                for (let i = 0; i < 12; ++i) {
-
-                  let currentDate = new Date(el.year, i);
-                  if ((this.parsedDateFrom.getFullYear() <= currentDate.getFullYear()) &&
-                    (currentDate.getFullYear() <= this.parsedDateTo.getFullYear())) {
-
-                    if ((this.parsedDateFrom.getMonth() <= currentDate.getMonth()) &&
-                      (currentDate.getMonth() <= this.parsedDateTo.getMonth())) {
-
-                      monthData.push(el[i]);
-                      monthDate.push(`${this.month[currentDate.getMonth()]} ${currentDate.getFullYear()}`);
-                    }
-                  }
-                }
-              }
-            });
-            // Создание графика
-            this.buildChart(monthData, monthDate);
-          },
-          error1 => {
-            console.log(error1);
-          });
-      } else {
-
-        // Если выбрны дневные данные
-        this.meteoService.getDayliData().subscribe(data => {
-
-          const dayliData = []; // Список месячных данных
-          const dayliDate = []; // Список данных формата Date
-          data.forEach(el => {
-            if (el.indexVMO === this.selectedCity) {
-              dayliData.push(el.maxTemp);
-            }
-          });
-
-          // Создание графика
-          this.buildChart(dayliData, dayliDate);
-
-        }, error1 => {
-          console.log(error1);
-        });
-      }
-    } else {
-      alert('Incorrect date period');
-    }
+    this.papa.parse(this.meteoService.remoteMaskURL, {
+      step: results => {
+        horizontalAxe.push(results.data[0][4]);
+        labels.push(results.data[0][0]);
+      },
+      complete: results => {
+        console.log(horizontalAxe, labels);
+        this.buildChart(horizontalAxe, labels);
+      },
+      download: true,
+      newline: '',
+      delimiter: ';'
+    });
   }
 
   public buildChart(data, labels) {
@@ -139,10 +98,14 @@ export class MainComponent implements OnInit {
         },
         scales: {
           xAxes: [{
-            display: true
+            display: true,
           }],
           yAxes: [{
-            display: true
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'Средняя температура воздуха'
+            }
           }],
         }
       }
