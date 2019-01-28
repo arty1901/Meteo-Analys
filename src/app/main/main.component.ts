@@ -1,7 +1,9 @@
 import {Component, OnInit} from '@angular/core';
+import {FormBuilder, Validators} from '@angular/forms';
 import {MeteoService} from '../meteo.service';
 import {Chart} from '../../../node_modules/chart.js';
 import {Papa} from 'ngx-papaparse';
+import {Plotly} from 'angular-plotly.js/src/app/shared/plotly.interface';
 
 @Component({
   selector: 'app-main',
@@ -10,18 +12,21 @@ import {Papa} from 'ngx-papaparse';
 })
 export class MainComponent implements OnInit {
 
-  // лольканые перменные
-  chart = []; // Переменная будет содержать информацию для графика
-  selectedMeasureType: number; // выбранный тип измерения
-  selectedStation: string; // выбранная станция
-  selectedSerialNumber: string; // выбранный серийный номер
-  dateFrom = '';
-  dateTo = '';
-  parsedDateFrom: Date;
-  parsedDateTo: Date;
+  // Инициализация формы
+  form = this.fb.group({
+    measureType: ['', Validators.required],
+    stationPosition: ['', Validators.required],
+    serialNumber: ['', Validators.required],
+    amkParam: ['', Validators.required],
+    timeInterval: ['', Validators.required],
+    dateFrom: ['', Validators.required],
+    dateTo: ['', Validators.required],
+  });
+
+  plotly: any;
 
   measureType = [
-    {type: 'amk', name: 'АМК (мгновенные)'}
+    {type: 'amkf', name: 'АМК (мгновенные)'}
   ];
   stationPosition = [
     {number: 1, name: 'Станция 167.4'},
@@ -50,7 +55,8 @@ export class MainComponent implements OnInit {
   };
 
   constructor(private meteoService: MeteoService,
-              private papa: Papa) {
+              private papa: Papa,
+              private fb: FormBuilder) {
   }
 
   ngOnInit() {
@@ -58,57 +64,61 @@ export class MainComponent implements OnInit {
 
   // Получает данные в зависимости от типа выбранных данных и выводит график
   public getData() {
-    this.parsedDateFrom = new Date(this.dateFrom);
-    this.parsedDateTo = new Date(this.dateTo);
 
     let horizontalAxe = [];
     let labels = [];
 
-    this.papa.parse(this.meteoService.remoteMaskURL, {
+    let requestURL = this.meteoService.makeUrl(
+      this.form.value.measureType,
+      this.form.value.dateFrom,
+      this.form.value.dateTo,
+      this.form.value.stationPosition,
+      this.form.value.serialNumber,
+      this.form.value.timeInterval);
+
+    console.log(requestURL);
+
+    this.papa.parse(requestURL, {
       step: results => {
-        horizontalAxe.push(results.data[0][4]);
+        horizontalAxe.push(results.data[0][this.form.value.amkParam]);
         labels.push(results.data[0][0]);
       },
       complete: results => {
         console.log(horizontalAxe, labels);
-        this.buildChart(horizontalAxe, labels);
+        this.plotly = {
+          data: [
+            {x: labels, y: horizontalAxe, type: 'scatter', mode: 'lines', marker: {color: 'red'}}
+          ],
+          layout: {
+            width: 1000, height: 600, title: 'test'
+          },
+          xaxis: {
+            visible: true,
+            title: {
+              text: 'x Axis',
+              font: {
+                family: 'Courier New, monospace',
+                size: 18,
+                color: '#000'
+              }
+            },
+          },
+          yaxis: {
+            visible: true,
+            title: {
+              text: 'Ось ординат',
+              font: {
+                family: 'Courier New, Times New Roman',
+                size: 18,
+                color: 'black'
+              }
+            }
+          }
+        };
       },
       download: true,
       newline: '',
       delimiter: ';'
-    });
-  }
-
-  public buildChart(data, labels) {
-    this.chart = new Chart('canvas', {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            data: data,
-            borderColor: '#3cba9f',
-            fill: false
-          }
-        ]
-      },
-      options: {
-        legend: {
-          display: false
-        },
-        scales: {
-          xAxes: [{
-            display: true,
-          }],
-          yAxes: [{
-            display: true,
-            scaleLabel: {
-              display: true,
-              labelString: 'Средняя температура воздуха'
-            }
-          }],
-        }
-      }
     });
   }
 }
