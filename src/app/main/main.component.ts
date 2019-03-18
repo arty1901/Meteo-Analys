@@ -3,7 +3,6 @@ import {FormBuilder, Validators} from '@angular/forms';
 import {MeteoService} from '../meteo.service';
 import {Chart} from '../../../node_modules/chart.js';
 import {Papa} from 'ngx-papaparse';
-import {Plotly} from 'angular-plotly.js/src/app/shared/plotly.interface';
 
 @Component({
   selector: 'app-main',
@@ -12,18 +11,19 @@ import {Plotly} from 'angular-plotly.js/src/app/shared/plotly.interface';
 })
 export class MainComponent implements OnInit {
 
+  plotly: any;
+
   // Инициализация формы
   form = this.fb.group({
     measureType: ['', Validators.required],
     stationPosition: ['', Validators.required],
     serialNumber: ['', Validators.required],
     amkParam: ['', Validators.required],
-    timeInterval: ['', Validators.required],
+    displayMethod: [''],
+    timeInterval: [''],
     dateFrom: ['', Validators.required],
     dateTo: ['', Validators.required],
   });
-
-  plotly: any;
 
   measureType = [
     {type: 'amkf', name: 'АМК (мгновенные)'}
@@ -42,19 +42,7 @@ export class MainComponent implements OnInit {
     {value: '15409AMK-03'},
   ];
 
-  public options: Pickadate.DateOptions = {
-    clear: 'Clear', // Clear button text
-    close: 'Ok',    // Ok button text
-    today: 'Today', // Today button text
-    closeOnClear: true,
-    closeOnSelect: true,
-    format: 'dddd, dd mmm, yyyy', // Visible date format (defaulted to formatSubmit if provided otherwise 'd mmmm, yyyy')
-    formatSubmit: 'yyyy-mm-dd',   // Return value format (used to set/get value)
-    selectMonths: true, // Creates a dropdown to control month
-    selectYears: 10,    // Creates a dropdown of 10 years to control year,
-  };
-
-  constructor(private meteoService: MeteoService,
+  constructor(public meteoService: MeteoService,
               private papa: Papa,
               private fb: FormBuilder) {
   }
@@ -62,11 +50,11 @@ export class MainComponent implements OnInit {
   ngOnInit() {
   }
 
-  // Получает данные в зависимости от типа выбранных данных и выводит график
   public getData() {
 
-    let horizontalAxe = [];
+    let paramsLength = this.form.value.amkParam.length;
     let labels = [];
+    let arr = [];
 
     let requestURL = this.meteoService.makeUrl(
       this.form.value.measureType,
@@ -76,49 +64,110 @@ export class MainComponent implements OnInit {
       this.form.value.serialNumber,
       this.form.value.timeInterval);
 
-    console.log(requestURL);
+    if (paramsLength > 1) {
 
-    this.papa.parse(requestURL, {
-      step: results => {
-        horizontalAxe.push(results.data[0][this.form.value.amkParam]);
-        labels.push(results.data[0][0]);
-      },
-      complete: results => {
-        console.log(horizontalAxe, labels);
-        this.plotly = {
-          data: [
-            {x: labels, y: horizontalAxe, type: 'scatter', mode: 'lines', marker: {color: 'red'}}
-          ],
-          layout: {
-            width: 1000, height: 600, title: 'test'
-          },
-          xaxis: {
-            visible: true,
-            title: {
-              text: 'x Axis',
-              font: {
-                family: 'Courier New, monospace',
-                size: 18,
-                color: '#000'
+      /**
+       * Инициализируем элементы конечного массива
+       */
+      this.form.value.amkParam.forEach((el, index) => {
+        arr[index] = [];
+      });
+
+      this.papa.parse(requestURL, {
+        download: true,
+        newline: '',
+        delimiter: ';',
+        skipEmptyLines: true,
+        step: results => {
+          /**
+           * В зависимости от колличества выбранных параметров, которые надо выводить,
+           * создается ассоциированный массив
+           */
+          for (let i = 0; i < this.form.value.amkParam.length; i++) {
+            arr[i].push(results.data[0][this.form.value.amkParam[i]]);
+          }
+          labels.push(results.data[0][0]);
+        },
+
+        complete: results => {
+
+          // console.log(this.createAxis(this.form.value.amkParam.length));
+          this.plotly = {
+            data: this.createData(
+              arr,
+              labels,
+              this.form.value.amkParam
+            ),
+            layout: {
+              margin: {
+                autoexpand: true
+              },
+              grid: {
+                rows: this.form.value.amkParam.length,
+                columns: 1,
+                pattern: 'independent',
+                roworder: 'bottom to top'
               }
             },
-          },
-          yaxis: {
-            visible: true,
-            title: {
-              text: 'Ось ординат',
-              font: {
-                family: 'Courier New, Times New Roman',
-                size: 18,
-                color: 'black'
-              }
-            }
-          }
+          };
+        },
+      });
+
+    }
+  }
+
+  /**
+   * Данный метод создает массив объектов данных для графиков
+   *
+   * @param data Массив данных по оси У
+   * @param label Массив данных по оси Х
+   */
+  public createData(data: any, label: any, axisLabel: Array<String>): Array<Object> {
+    let obj = [];
+    let axixCount = 2;
+
+    for (let i = 0; i < data.length; i++) {
+
+      if (i === 0) {
+
+        obj[i] = {
+          x: label,
+          y: data[i],
+          name: this.getPropName(this.meteoService.amkParams, +axisLabel[i]),
+          type: 'scatter',
+          mode: 'lines',
+          marker: {color: this.meteoService.getRandomColor()}
         };
-      },
-      download: true,
-      newline: '',
-      delimiter: ';'
+      } else {
+
+        obj[i] = {
+          y: data[i],
+          name: this.getPropName(this.meteoService.amkParams, +axisLabel[i]),
+          type: 'scatter',
+          mode: 'lines',
+          marker: {color: this.meteoService.getRandomColor()},
+          xaxis: 'x' + axixCount,
+          yaxis: 'y' + axixCount
+        };
+        axixCount++;
+      }
+    }
+
+    return obj;
+  }
+
+  /**
+   * Вытаскиваем значения свойств из массива this.meteoService.amkParams
+   *
+   * @param propList Массив объектов свойств
+   * @param propNumber Номер необходимого свойства
+   */
+  public getPropName(propList: Array<Object>, propNumber: any): String {
+
+    let obj = propList.filter(el => {
+      return el['id'] === propNumber;
     });
+
+    return obj[0]['paramName'];
   }
 }

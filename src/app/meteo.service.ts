@@ -1,7 +1,4 @@
-import { Injectable } from '@angular/core';
-import { HttpHeaders, HttpClient } from '@angular/common/http';
-import {map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
+import {Injectable, Input} from '@angular/core';
 import {Papa} from 'ngx-papaparse';
 
 @Injectable({
@@ -9,7 +6,6 @@ import {Papa} from 'ngx-papaparse';
 })
 export class MeteoService {
 
-  public remoteMaskURL = '/api/t/idd_amkf/*/tm/2018-04-10T16:31:00+07/2018-04-10T17:31:00+07?ids_group=1&sn=15409AMK-03';
   public amkParams = [
     {id: 3, paramName: 'Высота установки от уровня земли'},
     {id: 4, paramName: 'Средняя температура, градусы Цельсия'},
@@ -27,13 +23,16 @@ export class MeteoService {
     {id: 16, paramName: 'Скорость звука в воздухе, м/с'},
   ];
 
-  private options = {
-    complete: result => {
-      console.log(result);
-    },
-    newline: '',
-    download: true,
-    delimiter: ';'
+  public options: Pickadate.DateOptions = {
+    clear: 'Clear', // Clear button text
+    close: 'Ok',    // Ok button text
+    today: 'Today', // Today button text
+    closeOnClear: true,
+    closeOnSelect: true,
+    format: 'dddd, dd mmm, yyyy', // Visible date format (defaulted to formatSubmit if provided otherwise 'd mmmm, yyyy')
+    formatSubmit: 'yyyy-mm-dd',   // Return value format (used to set/get value)
+    selectMonths: true, // Creates a dropdown to control month
+    selectYears: 10,    // Creates a dropdown of 10 years to control year,
   };
 
   constructor() {}
@@ -46,5 +45,17 @@ export class MeteoService {
 
       return '/api/tl/' + interval + '/idd_' + measureType + '/*/tm/' + dateFrom + 'T16:31:00+07/' + dateTo + 'T17:31:00+07?ids_group=' + stationPosition + '&sn=' + serialNumber;
     }
+  }
+
+  /**
+   * Генератор случайного цвета
+   */
+  public getRandomColor() {
+    let letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
   }
 }

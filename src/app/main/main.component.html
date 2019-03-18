@@ -1,5 +1,5 @@
 <div class="row">
-  <div class="col s2">
+  <div class="col s3">
     <form action="" [formGroup]="form" (ngSubmit)="getData()">
       <mz-select-container>
         <select mz-select id="options-select-measure" [placeholder]="'Тип измерителя'" formControlName="measureType" required>
@@ -26,27 +26,35 @@
       </mz-select-container>
 
       <mz-select-container>
-        <select mz-select id="options-select-amkProps" [placeholder]="'Выберите параметр'" required formControlName="amkParam">
+        <select multiple mz-select id="options-select-amkProps" [placeholder]="'Выберите параметр'" required formControlName="amkParam">
           <option class="left circle" *ngFor="let el of meteoService.amkParams" value="{{el.id}}">
             {{el.paramName}}
           </option>
         </select>
       </mz-select-container>
 
+      <mz-radio-button-container *ngIf="form.value.amkParam.length > 1">
+        <label>Варианты отображения:</label> <br>
+        <input mz-radio-button [label]="'На Одном Графике'" [withGap]="true" id="radio-button-single"
+               name="radio-group" type="radio" value="single" formControlName="">
+        <input mz-radio-button [label]="'На Нескольких Графиках'" [withGap]="true" id="radio-button-multiple"
+               name="radio-group" type="radio" value="multi">
+      </mz-radio-button-container>
+
       <mz-input-container>
-        <input type="text" mz-input id="timeInterval" required formControlName="timeInterval">
+        <input type="text" mz-input id="timeInterval" [placeholder]="'Прорежение до'" formControlName="timeInterval">
       </mz-input-container>
 
       <!-- Выбор временного периода -->
       <mz-datepicker-container>
         <i mz-icon-mdi mz-input-prefix [icon]="'calendar'"></i>
-        <input mz-datepicker [label]="'Период От'" [options]="options" id="datepickerFrom"
+        <input mz-datepicker [label]="'Период От'" [options]="meteoService.options" id="datepickerFrom"
                placeholder="Выберите дату" type="text" required formControlName="dateFrom">
       </mz-datepicker-container>
 
       <mz-datepicker-container>
         <i mz-icon-mdi mz-input-prefix [icon]="'calendar'"></i>
-        <input mz-datepicker [label]="'Период До'" [options]="options" id="datepickerTo"
+        <input mz-datepicker [label]="'Период До'" [options]="meteoService.options" id="datepickerTo"
                placeholder="Выберите дату" type="text" required formControlName="dateTo">
       </mz-datepicker-container>
       <!-- Выбор временного пероида -->
@@ -58,7 +66,7 @@
   </div>
 
 <!-- Отображением графика -->
-  <div class="col s10">
+  <div class="col s9">
     <!--<div class="chart-container" style="position: relative; width: 100%; height: 150px;" *ngIf="chart">-->
       <!--<canvas id="canvas"></canvas>-->
     <!--</div>-->

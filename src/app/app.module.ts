@@ -49,13 +49,15 @@ import { AppComponent } from './app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { MainComponent } from './main/main.component';
 import { FormTestComponent } from './form-test/form-test.component';
+import { StatisticComponent } from './statistic/statistic.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavbarComponent,
     MainComponent,
-    FormTestComponent
+    FormTestComponent,
+    StatisticComponent
   ],
   imports: [
     ReactiveFormsModule,
