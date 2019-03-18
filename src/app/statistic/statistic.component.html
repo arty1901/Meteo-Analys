@@ -1,0 +1,48 @@
+<div class="container">
+  <h2>Описательная статистика</h2>
+
+  <div class="row">
+
+    <!--<div class="col s3">-->
+      <!--<mz-select-container>-->
+        <!--<select mz-select name="" [placeholder]="'Выберите метод'" id="method">-->
+          <!--<option class="left circle" value="">-->
+            <!--Среднеквадратичное отклонение-->
+          <!--</option>-->
+        <!--</select>-->
+      <!--</mz-select-container>-->
+    <!--</div>-->
+
+    <div class="col s3">
+      <div class="container">
+        <button mz-button (click)="dataProcessing()">
+          Show data
+        </button>
+      </div>
+    </div>
+
+    <div class="col s3">
+      <!-- Выбор временного периода -->
+      <mz-datepicker-container>
+        <i mz-icon-mdi mz-input-prefix [icon]="'calendar'"></i>
+        <input mz-datepicker [label]="'Период От'" [options]="meteService.options" id="datepickerFromStat"
+               placeholder="Выберите дату" type="text">
+      </mz-datepicker-container>
+
+      <mz-datepicker-container>
+        <i mz-icon-mdi mz-input-prefix [icon]="'calendar'"></i>
+        <input mz-datepicker [label]="'Период До'" [options]="meteService.options" id="datepickerToStat"
+               placeholder="Выберите дату" type="text">
+      </mz-datepicker-container>
+      <!-- Выбор временного пероида -->
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col s12">
+      <plotly-plot *ngIf="plotly" [data]="plotly.data" [layout]="plotly.layout"></plotly-plot>
+    </div>
+  </div>
+
+</div>
+

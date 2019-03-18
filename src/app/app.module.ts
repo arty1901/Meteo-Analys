@@ -48,7 +48,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { MainComponent } from './main/main.component';
-import { FormTestComponent } from './form-test/form-test.component';
 import { StatisticComponent } from './statistic/statistic.component';
 
 @NgModule({
@@ -56,7 +55,6 @@ import { StatisticComponent } from './statistic/statistic.component';
     AppComponent,
     NavbarComponent,
     MainComponent,
-    FormTestComponent,
     StatisticComponent
   ],
   imports: [
